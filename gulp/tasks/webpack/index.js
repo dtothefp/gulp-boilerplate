@@ -44,7 +44,7 @@ export default function(gulp, plugins, config) {
         contentBase: join(process.cwd(), 'dist'),
         publicPath: webpackConfig.output.publicPath,
         hot: true,
-        quiet: true,
+        quiet: false,
         noInfo: true,
         watchOptions: {
           aggregateTimeout: 300,
