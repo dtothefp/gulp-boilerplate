@@ -107,7 +107,7 @@ export default function(opts) {
   if(isDev && !isTest) {
     concatArr(config.entry, devEntry);
     concatArr(config.entry, testEntry);
-    config.devtool = 'inline-source-map';
+    config.devtool = 'eval';
     concatArr(config.plugins, devPlugins);
   } else if (isTest) {
     concatArr(config.entry, testEntry);
