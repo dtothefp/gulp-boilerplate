@@ -27,7 +27,7 @@ export default function(cliConfig) {
     phantomPath: binary,
     makeTestUrl(url) {
       url = url || '';
-      let fullPath = `http://localhost:3001/${url}?test=phantom`;
+      let fullPath = `http://localhost:3000/${url}?test=phantom`;
       return fullPath;
     },
     testPaths: path.join(process.cwd(), 'test/**/*-spec.js')

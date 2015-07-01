@@ -3,11 +3,11 @@ import path from 'path';
 import Nightmare from 'nightmare';
 import config from '../gulp/config';
 
-describe('optimizely mobile signup form', () => {
+describe('opening a webpage', () => {
   var {makeTestUrl, phantomPath, screenshot, email} = config();
   var url = makeTestUrl();
 
-  it('should error without a password', (done) => {
+  it('should listen for the `window.callPhantom` event', (done) => {
     new Nightmare({
         phantomPath,
         webSecurity: false

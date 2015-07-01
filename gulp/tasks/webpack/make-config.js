@@ -4,7 +4,7 @@ import eslintConfig from '../eslint/eslint-config';
 import formatter from 'eslint-friendly-formatter';
 
 export default function(opts) {
-  var {ENV, jsSrc} = opts;
+  var {ENV, jsSrc, isTest} = opts;
   let rules = eslintConfig({
     ENV
   });
@@ -41,13 +41,16 @@ export default function(opts) {
   ];
 
   var devEntry = [
-    'webpack-dev-server/client?http://localhost:3000',
-    'webpack/hot/dev-server',
-    join(jsSrc, 'phantom-shim.js')
+    'webpack-dev-server/client?http://localhost:3001',
+    'webpack/hot/dev-server'
   ];
 
   var src = [
     join(jsSrc, 'index.js')
+  ];
+
+  var testEntry = [
+    join(jsSrc, 'phantom-shim.js')
   ];
 
   var preLoaders = [
@@ -101,10 +104,14 @@ export default function(opts) {
     return configArr.push.apply(configArr, add);
   };
 
-  if(isDev) {
+  if(isDev && !isTest) {
     concatArr(config.entry, devEntry);
+    concatArr(config.entry, testEntry);
     config.devtool = 'inline-source-map';
     concatArr(config.plugins, devPlugins);
+  } else if (isTest) {
+    concatArr(config.entry, testEntry);
+    concatArr(config.plugins, prodPlugins);
   } else {
     concatArr(config.plugins, prodPlugins);
   }
