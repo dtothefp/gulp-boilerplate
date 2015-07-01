@@ -1,5 +1,6 @@
 import {join} from 'path';
 import eslintConfig from './eslint-config';
+import formatter from 'eslint-friendly-formatter';
 
 export default function(gulp, plugins, config) {
   var {eslint} = plugins;
@@ -22,7 +23,7 @@ export default function(gulp, plugins, config) {
       '!' + join(process.cwd(), 'node_modules/**/*.js')
     ])
     .pipe(eslint(pluginConfig))
-    .pipe(eslint.format())
+    .pipe(eslint.format(formatter))
     .pipe(eslint.failOnError());
   };
 }

@@ -12,6 +12,10 @@ var argv = yargs
             .alias('f', 'file')
             .argv;
 
+if(process.argv.indexOf('test') !== -1) {
+  argv.isTest = true;
+}
+
 var args = Object.keys(argv);
 var cliConfig = args.reduce((o, arg, i) => {
   let val = argv[arg];
@@ -25,7 +29,6 @@ var cliConfig = args.reduce((o, arg, i) => {
     o[arg] = val;
   }
 
-
   if(i === args.length - 1 && !_.has(argv, 'env')) {
     o.ENV = 'DEV';
   }
@@ -33,8 +36,16 @@ var cliConfig = args.reduce((o, arg, i) => {
 }, {});
 
 const plugins = pluginFn({
-  pattern: ['gulp-*', 'gulp.*', 'browser-sync'],
-  lazy: false
+  lazy: false,
+  pattern: [
+    'gulp-*',
+    'gulp.*',
+    'run-sequence'
+  ],
+  rename: {
+    'gulp-util': 'gutil',
+    'run-sequence': 'sequence'
+  }
 });
 const envConfig = config(cliConfig);
 const tasksDir = join(process.cwd(), 'gulp/tasks');
@@ -44,25 +55,28 @@ const tasksDir = join(process.cwd(), 'gulp/tasks');
  * the `gulp` object, all plugins with `gulp-` prefix in `package.json` and
  * the entire `config` object from `./gulp/config` for access into gulp task
  * callback functions.
+ * @param {String} path to the gulp task callback
+ * @return {Function} callback function for use in `gulp.task`
  */
 var getTask = (taskPath) => {
   return require(taskPath)(gulp, plugins, envConfig);
 };
 
+/**
+ * Strips dashes from string and converts the following character to uppercase
+ * @param {String} potentially has dashes
+ * @return {String} if string contains dashes they are stripped and following character to uppercase
+ */
 var dashToCamel = (str) => {
-  if(!~str.indexOf('-')) return str;
-  return str.split('-').map((item, i) => {
-    if(i) {
-      item = item.charAt(0).toUpperCase() + item.slice(1);
-    }
-    return item;
-  }).join('');
+  return str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
 };
 
 /**
  * Creates an object with keys corresponding to the Gulp task name and
  * values corresponding to the callback function passed as the second
  * argument to `gulp.task`
+ * @param {Array} all fill and directory names in the `gulp/task` directory
+ * @return {Object} map of task names to callback functions to be used in `gulp.task`
  */
 var tasksMap = read(tasksDir).reduce( (o, name) => {
   let taskPath = join(tasksDir, name);
@@ -82,3 +96,4 @@ var tasksMap = read(tasksDir).reduce( (o, name) => {
 
 export default tasksMap;
 export var {ENV} = cliConfig;
+export {plugins};
