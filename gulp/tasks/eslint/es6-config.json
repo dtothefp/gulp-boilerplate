@@ -1,0 +1,26 @@
+{
+  "parser": "babel-eslint",
+  "ecmaFeatures": {
+    "jsx": true,
+    "arrowFunctions": true,
+    "blockBindings": true,
+    "module": true,
+    "generators": true
+  },
+  "globals": {
+    "describe": true,
+    "it": true,
+    "before": true,
+    "after": true,
+    "beforeEach": true,
+    "afterEach": true,
+    "expect": true,
+    "should": true,
+    "$": true,
+    "jQuery": true
+  },
+  "env": {
+    "node": true,
+    "browser": true
+  }
+}
