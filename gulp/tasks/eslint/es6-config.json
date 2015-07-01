@@ -23,9 +23,5 @@
     "should": true,
     "$": true,
     "jQuery": true
-  },
-  "env": {
-    "node": true,
-    "browser": true
   }
 }
