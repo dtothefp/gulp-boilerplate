@@ -29,7 +29,9 @@ export default function(opts) {
     'new-cap': [1, { 'capIsNew': false }],
     'no-undef': 2
   };
-  let devRules = {};
+  let devRules = {
+    'no-debugger': 0
+  };
   let prodRules = {};
 
   return isDev ? mergeConfig(rules, devRules) : mergeConfig(rules, devRules);
