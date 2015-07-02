@@ -8,6 +8,7 @@ gulp.task('webpack', tasks.webpack);
 gulp.task('lint', tasks.eslint);
 gulp.task('connect', tasks.connect);
 gulp.task('template', tasks.template);
+gulp.task('karma', tasks.karma);
 gulp.task('mocha', tasks.mocha);
 gulp.task('open', tasks.open);
 

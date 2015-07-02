@@ -6,7 +6,7 @@ var obj = {
 };
 
 export default function() {
-  return console.log('module-a');
+  return 'module-a';
 }
 
 export {obj as dopeness};
