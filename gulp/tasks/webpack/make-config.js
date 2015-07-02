@@ -70,10 +70,6 @@ export default function(opts) {
       exclude: /node_modules/,
       loader: 'babel'
     },
-    //{
-      //test: /node_modules\/node-fetch\/index\.js/,
-      //loader: 'exports?window.fetch || Fetch;'
-    //},
     {
       test: /\.json$/,
       loader: 'json'
