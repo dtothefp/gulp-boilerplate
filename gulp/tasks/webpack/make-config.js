@@ -13,7 +13,10 @@ export default function(opts) {
     new webpack.ProvidePlugin({
       $: 'jquery',
       jQuery: 'jquery',
-      'window.jQuery': 'jquery'
+      'window.jQuery': 'jquery',
+      'fetch': 'imports?this=>global!exports?global.fetch!isomorphic-fetch',
+      'window.fetch': 'imports?this=>global!exports?global.fetch!isomorphic-fetch',
+      'global.fetch': 'imports?this=>global!exports?global.fetch!isomorphic-fetch'
     })
   ];
 
@@ -23,16 +26,16 @@ export default function(opts) {
   ];
 
   var prodPlugins = [
-    new webpack.optimize.UglifyJsPlugin({
-      output: {
-        comments: false
-      },
-      compress: {
-        warnings: false
-      },
-      sourceMap: false
-    }),
-    new webpack.optimize.DedupePlugin(),
+    //new webpack.optimize.UglifyJsPlugin({
+      //output: {
+        //comments: false
+      //},
+      //compress: {
+        //warnings: false
+      //},
+      //sourceMap: false
+    //}),
+    //new webpack.optimize.DedupePlugin(),
     new webpack.DefinePlugin({
       'process.env': {
         NODE_ENV: JSON.stringify('production')
@@ -67,6 +70,10 @@ export default function(opts) {
       exclude: /node_modules/,
       loader: 'babel'
     },
+    //{
+      //test: /node_modules\/node-fetch\/index\.js/,
+      //loader: 'exports?window.fetch || Fetch;'
+    //},
     {
       test: /\.json$/,
       loader: 'json'
@@ -96,8 +103,13 @@ export default function(opts) {
       preLoaders: preLoaders,
       loaders: loaders
     },
+    resolve: {
+      alias: {
+        fetch: 'isomorphic-fetch'
+      }
+    },
     plugins: plugins,
-    devtool: ENV === 'DEV' ? 'inline-source-map' : null
+    devtool: ENV === 'DEV' ? 'eval' : null
   };
 
   var concatArr = (configArr, add) => {
