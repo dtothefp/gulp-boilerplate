@@ -6,7 +6,6 @@ import makeConfig from './make-config';
 export default function(gulp, plugins, config) {
   var {ENV, jsSrc, isTest} = config;
   var {gutil} = plugins;
-    console.log('IS TEST', isTest);
   const isDev = ENV === 'DEV';
   var webpackConfig = makeConfig({
     ENV,

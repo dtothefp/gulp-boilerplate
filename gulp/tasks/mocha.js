@@ -7,7 +7,10 @@ export default function(gulp, plugins, config) {
   var src = file ? join(process.cwd(), 'test/**/', `${file}.js`) : testPaths;
 
   return () => {
-    return gulp.src(src)
+    return gulp.src([
+        src,
+        '!' + join(process.cwd(), 'test/**/*-karma-spec.js')
+      ])
       .pipe(mocha({
         timeout: 40000,
         require: [ babelPath ]
