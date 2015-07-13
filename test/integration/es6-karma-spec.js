@@ -1,12 +1,16 @@
 import {expect} from 'chai';
-import moduleA, {dopeness} from '../src/lib/module-a';
+import moduleA, {dopeness} from '../../src/lib/module-a';
 
 describe('es6 karma test', () => {
   var {a, b} = dopeness;
 
-  it('should work', () => {
+  it('should work', (done) => {
     expect(moduleA()).to.eq('module-a');
     expect(a).to.eq('a');
     expect(b).to.eq('b');
+    setTimeout(() => {
+      expect(1).to.eq(1);
+      done();
+    }, 5000);
   });
 });

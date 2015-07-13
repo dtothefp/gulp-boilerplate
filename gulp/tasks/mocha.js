@@ -1,15 +1,15 @@
 import {resolve, join} from 'path';
 
 export default function(gulp, plugins, config) {
-  var {testPaths, file} = config;
+  var {file} = config;
   var {mocha} = plugins;
   let babelPath = resolve(__dirname, '..', 'config/babelhook');
-  var src = file ? join(process.cwd(), 'test/**/', `${file}.js`) : testPaths;
+  var src = join(process.cwd(), 'test/unit/**', file ? `${file}.js` : '*-spec.js');
 
   return () => {
     return gulp.src([
         src,
-        '!' + join(process.cwd(), 'test/**/*-karma-spec.js')
+        '!' + join(process.cwd(), 'test/integration/**/*.js')
       ])
       .pipe(mocha({
         timeout: 40000,

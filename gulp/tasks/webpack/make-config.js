@@ -1,14 +1,26 @@
 import {join, resolve} from 'path';
+import {merge} from 'lodash';
 import webpack from 'webpack';
+import WebpackNotifierPlugin from 'webpack-notifier';
 import eslintConfig from '../eslint/eslint-config';
 import formatter from 'eslint-friendly-formatter';
 
 export default function(opts) {
-  var {ENV, jsSrc, isTest} = opts;
+  var {ENV, jsSrc} = opts;
+
   let rules = eslintConfig({
     ENV
   });
-  const isDev = ENV === 'DEV';
+
+  var addRewire = (loaders) => {
+    return loaders.map((o) => {
+      if(/babel/.test(o.loader)) {
+        o.loader += '&plugins=babel-plugin-rewire';
+      }
+      return o;
+    });
+  };
+
   var plugins = [
     new webpack.ProvidePlugin({
       $: 'jquery',
@@ -17,6 +29,9 @@ export default function(opts) {
       'fetch': 'imports?this=>global!exports?global.fetch!isomorphic-fetch',
       'window.fetch': 'imports?this=>global!exports?global.fetch!isomorphic-fetch',
       'global.fetch': 'imports?this=>global!exports?global.fetch!isomorphic-fetch'
+    }),
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(ENV)
     })
   ];
 
@@ -26,34 +41,9 @@ export default function(opts) {
   ];
 
   var prodPlugins = [
-    //new webpack.optimize.UglifyJsPlugin({
-      //output: {
-        //comments: false
-      //},
-      //compress: {
-        //warnings: false
-      //},
-      //sourceMap: false
-    //}),
-    //new webpack.optimize.DedupePlugin(),
-    new webpack.DefinePlugin({
-      'process.env': {
-        NODE_ENV: JSON.stringify('production')
-      }
-    })
-  ];
-
-  var devEntry = [
-    'webpack-dev-server/client?http://localhost:3001',
-    'webpack/hot/dev-server'
-  ];
-
-  var src = [
-    join(jsSrc, 'index.js')
-  ];
-
-  var testEntry = [
-    join(jsSrc, 'phantom-shim.js')
+    new webpack.optimize.DedupePlugin(),
+    new webpack.optimize.OccurenceOrderPlugin(),
+    new webpack.optimize.AggressiveMergingPlugin()
   ];
 
   var preLoaders = [
@@ -68,7 +58,7 @@ export default function(opts) {
     {
       test: /\.js?$/,
       exclude: /node_modules/,
-      loader: 'babel'
+      loader: 'babel?optional[]=runtime&stage=0'
     },
     {
       test: /\.json$/,
@@ -77,52 +67,113 @@ export default function(opts) {
   ];
 
   var config = {
-    entry:  src,
-    output: {
-      path: join(process.cwd(), 'dist'),
-      publicPath: '/',
-      filename: '[name].js'
-    },
     externals: {
       jquery: 'window.jQuery'
     },
-    eslint: {
-      rules,
-      configFile: resolve(__dirname, '..', 'eslint/es6-config.json'),
-      formatter,
-      emitError: true,
-      emitWarning: true,
-      failOnWarning: true,
-      failOnError: true
-    },
     module: {
-      preLoaders: preLoaders,
       loaders: loaders
     },
     resolve: {
+      extensions: ['', '.js'],
       alias: {
         fetch: 'isomorphic-fetch'
       }
+    }
+  };
+
+  const configFn = {
+    DEV(isProd) {
+      let hotComponents = [
+        'webpack-dev-server/client?http://localhost:3001',
+        'webpack/hot/dev-server'
+      ];
+      let devConfig = {
+        entry:  [
+          join(jsSrc, 'index.js')
+        ],
+        output: {
+          path: join(process.cwd(), 'dist'),
+          publicPath: '/',
+          filename: '[name].js'
+        },
+        eslint: {
+          rules,
+          configFile: resolve(__dirname, '..', 'eslint/es6-config.json'),
+          formatter,
+          emitError: true,
+          emitWarning: true,
+          failOnWarning: true,
+          failOnError: true
+        },
+        module: {
+          preLoaders: preLoaders,
+          loaders: loaders
+        },
+        plugins: plugins.concat(devPlugins)
+      };
+
+      if(!isProd) {
+        devConfig.devtool = 'eval';
+        devConfig.entry.push.apply(devConfig, hotComponents);
+      }
+
+      return merge({}, config, devConfig);
     },
-    plugins: plugins,
-    devtool: ENV === 'DEV' ? 'eval' : null
+
+    PROD() {
+      let prodConfig = merge({}, this.DEV(true), {
+        plugins: plugins.concat(prodPlugins)
+      });
+
+      // allow getting rid of the UglifyJsPlugin
+      // https://github.com/webpack/webpack/issues/1079
+      prodConfig.plugins.push(
+        new webpack.optimize.UglifyJsPlugin({
+          output: {
+            comments: false
+          },
+          compress: {
+            warnings: false
+          },
+          sourceMap: false
+        })
+      );
+
+      return prodConfig;
+    },
+
+    TEST() {
+      let testConfig = {
+        module: {
+          loaders: addRewire(loaders)
+        },
+        plugins: plugins.concat(devPlugins),
+        watch: true,
+        devtool: 'inline-source-map'
+      };
+
+      return merge({}, config, testConfig);
+    },
+
+    CI() {
+      let ciConfig = {
+        module: {
+          loaders: addRewire(loaders),
+          postLoaders: [
+            {test: /\.js$/, loader: 'uglify', exclude: /\.test\.js$/}
+          ]
+        },
+        plugins: plugins.concat(prodPlugins),
+        'uglify-loader': {
+          compress: {warnings: false}
+        }
+      };
+
+      return merge({}, config, ciConfig);
+    }
   };
 
-  var concatArr = (configArr, add) => {
-    return configArr.push.apply(configArr, add);
-  };
+  var compileConfig = configFn[ENV]();
 
-  if(isDev && !isTest) {
-    concatArr(config.entry, devEntry);
-    concatArr(config.entry, testEntry);
-    config.devtool = 'eval';
-    concatArr(config.plugins, devPlugins);
-  } else if (isTest) {
-    concatArr(config.entry, testEntry);
-    concatArr(config.plugins, prodPlugins);
-  } else {
-    concatArr(config.plugins, prodPlugins);
-  }
-
-  return config;
+  return compileConfig;
 }

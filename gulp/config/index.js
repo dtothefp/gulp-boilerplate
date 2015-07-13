@@ -29,8 +29,7 @@ export default function(cliConfig) {
       url = url || '';
       let fullPath = `http://localhost:3000/${url}?test=phantom`;
       return fullPath;
-    },
-    testPaths: path.join(process.cwd(), 'test/**/*-spec.js')
+    }
   };
 
   return _.merge({}, config, cliConfig);
